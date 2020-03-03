@@ -46,7 +46,7 @@ namespace WindowsFormsApplication2
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            ++dungeonX;
+            --dungeonX;
             dungeonX %= dungeon.Width;
             foreach (GhostNPC ghost in ghosts)
             {
@@ -56,7 +56,7 @@ namespace WindowsFormsApplication2
             using (Graphics g = Graphics.FromImage(buffer))
             {
                 g.DrawImage(dungeon, new Point(dungeonX, 0));
-                g.DrawImage(dungeon, new Point(dungeonX - dungeon.Width, 0));
+                g.DrawImage(dungeon, new Point(dungeonX + dungeon.Width, 0));
                 foreach (GhostNPC ghost in ghosts)
                 {
                     ghost.Draw(g);
