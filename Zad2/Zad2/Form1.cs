@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,6 +12,7 @@ namespace WindowsFormsApplication2
 {
     public partial class Form1 : Form
     {
+        private int dungeonX = 0;
         private Bitmap dungeon;
         private List<GhostNPC> ghosts = new List<GhostNPC>();
         private Player player;
@@ -45,6 +46,8 @@ namespace WindowsFormsApplication2
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            ++dungeonX;
+            dungeonX %= dungeon.Width;
             foreach (GhostNPC ghost in ghosts)
             {
                 ghost.Move();
@@ -52,7 +55,8 @@ namespace WindowsFormsApplication2
             player.Move();
             using (Graphics g = Graphics.FromImage(buffer))
             {
-                g.DrawImage(dungeon, new Point(0, 0));
+                g.DrawImage(dungeon, new Point(dungeonX, 0));
+                g.DrawImage(dungeon, new Point(dungeonX - dungeon.Width, 0));
                 foreach (GhostNPC ghost in ghosts)
                 {
                     ghost.Draw(g);
