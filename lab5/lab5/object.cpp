@@ -1,19 +1,14 @@
-
 #include "object.h"
 #include "ShaderLoader.h"
 #include "objload.h"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-Object::Object(const char * modelPath, const char *texturePath,
-	const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename)
-{
+Object::Object(const char * modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename) {
 	init(modelPath, texturePath, vertexShaderFilename, geometryShaderFilename, fragmentShaderFilename);
 }
 
-void Object::init(const char * modelPath, const char *texturePath,
-	const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename)
-{
+void Object::init(const char *modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename) {
 	obj::Model model = obj::loadModelFromFile(modelPath);
 	faceCount_ = model.faces["default"].size();
 
@@ -35,9 +30,7 @@ void Object::init(const char * modelPath, const char *texturePath,
 	glBindVertexArray(vertexArray_);
 	glGenBuffers(1, &vertexIndexBuffer_);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexIndexBuffer_);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		faceCount_ * sizeof(unsigned short),
-		model.faces["default"].data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount_ * sizeof(unsigned short), model.faces["default"].data(), GL_STATIC_DRAW);
 
 	glGenBuffers(1, &vertexBuffer_);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_);
@@ -67,24 +60,29 @@ void Object::init(const char * modelPath, const char *texturePath,
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &texture_);
-	glBindTexture(GL_TEXTURE_2D, texture_);
-	texture_ = SOIL_load_OGL_texture(
-		texturePath,
-		SOIL_LOAD_RGB,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS);
+	if (texturePath == NULL) {
+		textured = false;
+	}
+	else {
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_);
+		glBindTexture(GL_TEXTURE_2D, texture_);
+		texture_ = SOIL_load_OGL_texture(
+			texturePath,
+			SOIL_LOAD_RGB,
+			SOIL_CREATE_NEW_ID,
+			SOIL_FLAG_MIPMAPS);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // sposob filtrowania tekstury
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // sposob filtrowania tekstury
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 }
 
-void Object::setMatrixFunction(std::function<glm::mat4(float)> func)
-{
+void Object::setMatrixFunction(std::function<glm::mat4(float)> func) {
 	matrixFunction_ = func;
 }
 
@@ -92,44 +90,44 @@ void Object::setModelMatrix(glm::mat4 const& matrix) {
 	localModelMatrix_ = matrix;
 }
 
-void Object::update(float time)
-{
-	glm::mat4 externalTransform;
+void Object::update(float time) {
+	glm::mat4 externalTransform = glm::identity<glm::mat4>();
 	if (matrixFunction_) {
 		externalTransform = matrixFunction_(time);
 	}
 	modelMatrix_ = externalTransform * localModelMatrix_;
 }
 
-void Object::render(RenderData& data)
-{
+void Object::render(RenderData& data) {
 	glUseProgram(program_);
 	glBindVertexArray(vertexArray_);
 
-	glm::mat4 modelViewProjMatrix = data.viewProjMatrix * getModelMatrix();
 	glm::mat4 modelMatrix = getModelMatrix();
 
-	glUniformMatrix4fv(glGetUniformLocation(program_,
-		"modelViewProjectionMatrix"), 1, GL_FALSE,
-		(float*)&modelViewProjMatrix);
-
-	glUniformMatrix4fv(glGetUniformLocation(program_,
-		"modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
-
-	glUniform3f(glGetUniformLocation(program_, "lightSource"),
-		data.lightSource.x, data.lightSource.y, data.lightSource.z);
+	glUniformMatrix4fv(glGetUniformLocation(program_, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(program_, "view"), 1, GL_FALSE, glm::value_ptr(data.viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(program_, "projection"), 1, GL_FALSE, glm::value_ptr(data.projMatrix));
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture_);
-	glUniform1i(glGetUniformLocation(program_, "tex"), 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, data.skyboxTexture);
+	glUniform1i(glGetUniformLocation(program_, "skybox"), 0);
+	glUniform3fv(glGetUniformLocation(program_, "cameraPos"), 1, glm::value_ptr(data.cameraPos));
+	glUniform1fv(glGetUniformLocation(program_, "time"), 1, (GLfloat*)&data.time);
+
+	if (textured) {
+		glBindTexture(GL_TEXTURE_2D, texture_);
+		glUniform1i(glGetUniformLocation(program_, "tex"), 0);
+	}
 
 	glDrawElements(GL_TRIANGLES, faceCount_, GL_UNSIGNED_SHORT, (void*)0);
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+	if (textured) {
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
 
-Object::~Object()
-{
+Object::~Object() {
 }

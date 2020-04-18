@@ -8,7 +8,6 @@
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 
-
 #include "camera.h"
 #include "cameraController.h"
 #include "scene.h"
@@ -34,10 +33,21 @@ vector<std::string> skyboxFaces =
 void init() {
 	cameraController.setCamera(&camera);
 	scene.setCamera(&camera);
-	camera.setViewProperties(glm::vec3(-6.0f, 3.0f, -3.0f), glm::quat(glm::vec3(0.0f, glm::half_pi<float>(), 0.0f)));
+	camera.setViewProperties(glm::vec3(-10.0f, -2.0f, 2.0f), glm::quat(glm::vec3(0.0f, glm::half_pi<float>(), 0.0f)));
 
 	skybox.init(skyboxFaces);
 	scene.setSkybox(&skybox);
+
+	Object *cube = new Object("models/cube.obj", NULL, "shaders/shader_mirror.vert", NULL, "shaders/shader_mirror.frag");
+	cube->setModelMatrix(glm::identity<glm::mat4>());
+	cube->setMatrixFunction([](float time) {
+		return glm::rotate(glm::identity<glm::mat4>(), glm::pi<float>()/4*time, glm::vec3(0, 1, 0));
+	});
+	scene.addRenderable(cube);
+
+	Object *ball = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_explode.vert", "shaders/shader_explode.geom", "shaders/shader_explode.frag");
+	ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 4)));
+	scene.addRenderable(ball);
 }
 
 void renderScene() {
@@ -46,8 +56,10 @@ void renderScene() {
 	double dtime = time - prevTime;
 	prevTime = time;
 
+	cameraController.step(dtime);
+
 	scene.update(time);
-	scene.render();
+	scene.render(time);
 }
 
 void idle() {

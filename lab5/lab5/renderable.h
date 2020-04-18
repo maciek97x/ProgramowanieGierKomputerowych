@@ -3,8 +3,7 @@
 #include "glm/glm.hpp"
 #include "RenderData.h"
 
-class Renderable
-{
+class Renderable {
 public:
     Renderable() {}
     virtual ~Renderable() {}

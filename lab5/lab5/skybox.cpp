@@ -1,12 +1,11 @@
 #include "Skybox.h"
 
-SkyBox::SkyBox()
-{
+SkyBox::SkyBox() {
 }
 
-SkyBox::~SkyBox()
-{
+SkyBox::~SkyBox() {
 }
+
 bool SkyBox::init(std::vector<std::string> faces) {
 	float skyboxVertices[] = {
 		// positions          
@@ -95,18 +94,19 @@ bool SkyBox::init(std::vector<std::string> faces) {
 	return true;
 }
 
-void SkyBox::setModelMatrix(glm::mat4 const & m)
-{
+void SkyBox::setModelMatrix(glm::mat4 const & m) {
 	// ignore (skybox is static)
 }
 
-glm::mat4 SkyBox::getModelMatrix() const
-{
+glm::mat4 SkyBox::getModelMatrix() const {
 	return glm::mat4();
 }
 
-void SkyBox::update(float time)
-{
+GLuint SkyBox::getTexture() {
+	return cubemapTexture_;
+}
+
+void SkyBox::update(float time) {
 }
 
 void SkyBox::render(RenderData& data) {

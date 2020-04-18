@@ -12,8 +12,7 @@
 using namespace std;
 
 // Class responsible for rendering scene, setting camera and observing input
-class Scene
-{
+class Scene {
 public:
     Scene();
     virtual ~Scene();
@@ -29,7 +28,7 @@ public:
     void update(float time);
 
     // render scene
-    void render();
+    void render(float time);
 
     //sets scene camera
     void setCamera(Camera* camera);

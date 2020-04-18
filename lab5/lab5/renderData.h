@@ -3,11 +3,12 @@
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 
-struct RenderData
-{
+struct RenderData {
     glm::mat4 viewProjMatrix;
 	glm::mat4 viewMatrix;
 	glm::mat4 projMatrix;
-    glm::vec3 lightSource;
+    GLuint skyboxTexture;
+	glm::vec3 cameraPos;
+	GLfloat time;
 };
 

@@ -11,8 +11,7 @@
 #include <vector>
 #include <string>
 
-class SkyBox : public Renderable
-{
+class SkyBox : public Renderable {
 public:
 	SkyBox();
 
@@ -22,6 +21,7 @@ public:
 
 	void setModelMatrix(glm::mat4 const &m);
 	glm::mat4 getModelMatrix() const;
+	GLuint getTexture();
 	void update(float time);
     void render(RenderData &data);
 

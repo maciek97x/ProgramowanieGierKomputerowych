@@ -5,11 +5,9 @@
 
 typedef glm::mat4(*matrixFunction)(float time);
 
-class Object : public Renderable
-{
+class Object : public Renderable {
 public:
-	Object(const char* modelPath, const char* texturePath,
-		const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename);
+	Object(const char* modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename);
 	virtual ~Object();
 
 	// set function to be called to update the model matrix
@@ -22,10 +20,10 @@ public:
 	void render(RenderData& data);
 
 private:
-	void init(const char * path, const char* texturePath,
-		const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename);
+	void init(const char* modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename);
 
 	int faceCount_;
+	bool textured;
 
 	glm::mat4 localModelMatrix_, modelMatrix_;
 
