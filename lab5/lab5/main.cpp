@@ -39,15 +39,24 @@ void init() {
 	scene.setSkybox(&skybox);
 
 	Object *cube = new Object("models/cube.obj", NULL, "shaders/shader_mirror.vert", NULL, "shaders/shader_mirror.frag");
-	cube->setModelMatrix(glm::identity<glm::mat4>());
+	cube->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 0)));
 	cube->setMatrixFunction([](float time) {
-		return glm::rotate(glm::identity<glm::mat4>(), glm::pi<float>()/4*time, glm::vec3(0, 1, 0));
+		return glm::rotate(glm::identity<glm::mat4>(), glm::pi<float>() / 4 * time,
+			glm::vec3(0, glm::sin(glm::pi<float>() / 6 * time), glm::cos(glm::pi<float>() / 6 * time)));
 	});
 	scene.addRenderable(cube);
 
 	Object *ball = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_explode.vert", "shaders/shader_explode.geom", "shaders/shader_explode.frag");
 	ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 4)));
 	scene.addRenderable(ball);
+
+	Object *ball_2 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_rotate.vert", "shaders/shader_rotate.geom", "shaders/shader_rotate.frag");
+	ball_2->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 8)));
+	scene.addRenderable(ball_2);
+
+	Object *ball_3 = new Object("models/ball.obj", "textures/fire.png", "shaders/shader_expand.vert", "shaders/shader_expand.geom", "shaders/shader_expand.frag");
+	ball_3->setModelMatrix(glm::scale(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 12)), glm::vec3(0.1, 0.1, 0.1)));
+	scene.addRenderable(ball_3);
 }
 
 void renderScene() {

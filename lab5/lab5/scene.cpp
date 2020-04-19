@@ -39,7 +39,6 @@ void Scene::render(float time) {
         renderable.second->render(data);
 
     glutSwapBuffers();
-	printf("\r%f  ", time);
 }
 
 void Scene::setCamera(Camera *camera) {
