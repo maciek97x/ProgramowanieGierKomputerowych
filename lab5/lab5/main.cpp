@@ -53,10 +53,6 @@ void init() {
 	Object *ball_2 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_rotate.vert", "shaders/shader_rotate.geom", "shaders/shader_rotate.frag");
 	ball_2->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 8)));
 	scene.addRenderable(ball_2);
-
-	Object *ball_3 = new Object("models/ball.obj", "textures/fire.png", "shaders/shader_expand.vert", "shaders/shader_expand.geom", "shaders/shader_expand.frag");
-	ball_3->setModelMatrix(glm::scale(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 12)), glm::vec3(0.1, 0.1, 0.1)));
-	scene.addRenderable(ball_3);
 }
 
 void renderScene() {
@@ -104,7 +100,11 @@ int main(int argc, char** argv) {
 	glutInitWindowSize(600, 600);
 
 	glutCreateWindow("GL");
+
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glewInit();
 
 	init();
