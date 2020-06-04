@@ -1,15 +1,15 @@
 #pragma once
-#include "Camera.h"
-#include "ShaderLoader.h"
-#include "soil.h"
-#include "Renderable.h"
-#include "objload.h"
-
-#include "GL/glew.h"
-#include "glm/glm.hpp"
-#include "RenderData.h"
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <soil.h>
 #include <vector>
 #include <string>
+
+#include "Camera.h"
+#include "ShaderLoader.h"
+#include "Renderable.h"
+#include "objload.h"
+#include "RenderData.h"
 
 class SkyBox : public Renderable {
 public:

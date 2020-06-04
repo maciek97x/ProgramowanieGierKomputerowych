@@ -1,5 +1,5 @@
 #include "cameraController.h"
-#include "GL/freeglut.h"
+#include <GL/freeglut.h>
 
 CameraController::CameraController() {
 	moveSpeed_ = 20.0f;

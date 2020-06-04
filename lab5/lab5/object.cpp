@@ -8,9 +8,17 @@ Object::Object(const char * modelPath, const char* texturePath, const char* vert
 	init(modelPath, texturePath, vertexShaderFilename, geometryShaderFilename, fragmentShaderFilename);
 }
 
+Object::Object(const char * modelPath, const char* texturePath, const char* vertexShaderFilename, const char* fragmentShaderFilename) {
+	init(modelPath, texturePath, vertexShaderFilename, NULL, fragmentShaderFilename);
+}
+
 void Object::init(const char *modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename) {
 	obj::Model model = obj::loadModelFromFile(modelPath);
 	faceCount_ = model.faces["default"].size();
+
+	velocity_ = glm::vec3();
+	acceleration_ = glm::vec3();
+	mass_ = 1.0f;
 
 	Core::ShaderLoader shaderLoader;
 
@@ -90,12 +98,101 @@ void Object::setModelMatrix(glm::mat4 const& matrix) {
 	localModelMatrix_ = matrix;
 }
 
+glm::vec3 Object::getPosition() {
+	return glm::vec3(getModelMatrix()[3]);
+}
+
+void Object::setCollider(SphereCollider* collider) {
+	collider_ = collider;
+	collider->setModelMatrix(&localModelMatrix_);
+}
+
+void Object::setPhysical(bool physical) {
+	physical_ = physical;
+}
+
+bool Object::getPhysical() {
+	return physical_;
+}
+
+void Object::addForce(glm::vec3 force) {
+	acceleration_ += force / mass_;
+}
+glm::vec3 Object::getVelocity() {
+	return velocity_;
+}
+void Object::setVelocity(glm::vec3 velocity) {
+	velocity_ = velocity;
+}
+glm::vec3 Object::getAcceleration() {
+	return acceleration_;
+}
+void Object::setAcceleration(glm::vec3 acceleration) {
+	acceleration_ = acceleration;
+}
+
+void Object::collide(Object* other) {
+	if (collider_->collides(other->collider_)) {
+		if (physical_ && other->physical_) {
+			glm::vec3 delta = getPosition() - other->getPosition();
+
+			// minimum translation distance to push balls apart after intersecting
+			float d = glm::length(delta);
+
+			glm::vec3 mtd = glm::vec3(delta);
+			mtd *= (collider_->getRadius() + other->collider_->getRadius() - d) / d;
+
+			// inverse mass quantities
+			float im1 = 1 / mass_;
+			float im2 = 1 / other->mass_;
+
+			// push-pull them apart based off their mass
+			localModelMatrix_ = glm::translate(localModelMatrix_, mtd * (im1 / (im1 + im2)));
+
+			other->localModelMatrix_ = glm::translate(other->localModelMatrix_, -mtd * (im1 / (im1 + im2)));
+
+			// impact speed
+			glm::vec3 v = velocity_;
+			v -= other->velocity_;
+
+			glm::vec3 mtd_normalized = mtd / glm::length(mtd);
+			float vn = glm::dot(v, mtd_normalized);
+
+			// sphere intersecting but moving away from each other already
+			if (vn > 0.0f) return;
+
+			// collision impulse
+			float i = -2.0f * vn / (im1 + im2);
+
+			glm::vec3 impulse = mtd_normalized * i;
+
+			// change in momentum
+			velocity_ += impulse * im1;
+			other->velocity_ -= impulse * im2;
+		}
+		else if (physical_) {
+
+		}
+	}
+}
+
 void Object::update(float time) {
 	glm::mat4 externalTransform = glm::identity<glm::mat4>();
 	if (matrixFunction_) {
 		externalTransform = matrixFunction_(time);
 	}
 	modelMatrix_ = externalTransform * localModelMatrix_;
+}
+
+void Object::updatePhysics(float time) {
+	if (physical_) {
+		if (localModelMatrix_[3][1] - collider_->getRadius() < 0 && velocity_[1] < 0) {
+			localModelMatrix_[3][1] = collider_->getRadius();
+			velocity_[1] = -velocity_[1];
+		}
+		velocity_ += acceleration_ * time;
+		localModelMatrix_ = glm::translate(localModelMatrix_, velocity_ * time);
+	}
 }
 
 void Object::render(RenderData& data) {

@@ -1,24 +1,46 @@
 #include "Scene.h"
 
-Scene::Scene() {
+Scene::Scene(float gravity) {
+	gravity_ = gravity;
 }
 
 Scene::~Scene() {
 }
 
-int Scene::addRenderable(Renderable * object) {
-    renderables_[nextRenderableId_] = object;
-    return nextRenderableId_++;
+int Scene::addObject(Object * object) {
+	if (object->getPhysical()) {
+		object->addForce(glm::vec3(0.0f, -gravity_, 0.0f));
+	}
+    objects_[nextObjectId_] = object;
+
+    return nextObjectId_++;
 }
 
-void Scene::removeRenderable(int id) {
-    renderables_.erase(id);
+void Scene::removeObject(int id) {
+    objects_.erase(id);
 }
 
 void Scene::update(float time) {
-    for (auto &renderable : renderables_)
-        renderable.second->update(time);
+	for (auto &object : objects_) {
+		object.second->update(time);
+	}
 }
+
+void Scene::updatePhysics(float time) {
+	for (auto &object : objects_) {
+		object.second->updatePhysics(time);
+	}
+	for (auto &object_1 : objects_) {
+		for (auto &object_2 : objects_) {
+			if (object_1.first != object_2.first) {
+				Object* obj_1 = object_1.second;
+				Object* obj_2 = object_2.second;
+				obj_1->collide(obj_2);
+			}
+		}
+	}
+}
+
 void Scene::render(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -35,8 +57,8 @@ void Scene::render(float time) {
 
 	skybox_->render(data);
 
-    for (auto &renderable : renderables_)
-        renderable.second->render(data);
+    for (auto &object : objects_)
+        object.second->render(data);
 
     glutSwapBuffers();
 }

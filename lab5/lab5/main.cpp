@@ -3,10 +3,10 @@
 #include <cmath>
 #include <vector>
 
-#include "GL/glew.h"
-#include "GL/freeglut.h"
-#include "glm/glm.hpp"
-#include "glm/ext.hpp"
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include "camera.h"
 #include "cameraController.h"
@@ -14,10 +14,17 @@
 #include "skybox.h"
 #include "object.h"
 #include "shaderLoader.h"
+#include "sphereCollider.h"
+
+const float gravity = 9.8;
+
+// fixed timestep for stable and deterministic simulation
+const double physicsStepTime = 1.0 / 60.0;
+double physicsTimeToProcess = 0;
 
 Camera camera;
 CameraController cameraController;
-Scene scene;
+Scene scene(gravity);
 SkyBox skybox;
 
 vector<std::string> skyboxFaces =
@@ -38,21 +45,36 @@ void init() {
 	skybox.init(skyboxFaces);
 	scene.setSkybox(&skybox);
 
-	Object *cube = new Object("models/cube.obj", NULL, "shaders/shader_mirror.vert", NULL, "shaders/shader_mirror.frag");
-	cube->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 0)));
-	cube->setMatrixFunction([](float time) {
-		return glm::rotate(glm::identity<glm::mat4>(), glm::pi<float>() / 4 * time,
-			glm::vec3(0, glm::sin(glm::pi<float>() / 6 * time), glm::cos(glm::pi<float>() / 6 * time)));
-	});
-	scene.addRenderable(cube);
+	Object *ball = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
+	ball->setCollider(new SphereCollider(1.0f));
+	ball->setPhysical(true);
+	ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 10, 4)));
+	scene.addObject(ball);
 
-	Object *ball = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_explode.vert", "shaders/shader_explode.geom", "shaders/shader_explode.frag");
-	ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 4)));
-	scene.addRenderable(ball);
+	Object *ball_2 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
+	ball_2->setCollider(new SphereCollider(1.0f));
+	ball_2->setPhysical(true);
+	ball_2->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 10, 8)));
+	scene.addObject(ball_2);
 
-	Object *ball_2 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_rotate.vert", "shaders/shader_rotate.geom", "shaders/shader_rotate.frag");
-	ball_2->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, 8)));
-	scene.addRenderable(ball_2);
+	Object *ball_3 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
+	ball_3->setCollider(new SphereCollider(1.0f));
+	ball_3->setPhysical(true);
+	ball_3->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 3, 7)));
+	scene.addObject(ball_3);
+}
+
+void updatePhysics(float dtime)
+{
+	if (dtime < 1.0f)
+	{
+		physicsTimeToProcess += dtime;
+	}
+	while (physicsTimeToProcess > 0)
+	{
+		scene.updatePhysics(physicsStepTime);
+		physicsTimeToProcess -= physicsStepTime;
+	}
 }
 
 void renderScene() {
@@ -63,6 +85,7 @@ void renderScene() {
 
 	cameraController.step(dtime);
 
+	updatePhysics(dtime);
 	scene.update(time);
 	scene.render(time);
 }

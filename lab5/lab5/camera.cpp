@@ -1,5 +1,5 @@
 #include "Camera.h"
-#include "GL/freeglut.h"
+#include <GL/freeglut.h>
 
 Camera::Camera() {
 	pos_ = glm::vec3(0, 10, 20);

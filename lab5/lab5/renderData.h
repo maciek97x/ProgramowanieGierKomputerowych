@@ -1,7 +1,7 @@
 #pragma once
-#include "GL/glew.h"
-#include "glm/glm.hpp"
-#include "glm/ext.hpp"
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 struct RenderData {
     glm::mat4 viewProjMatrix;
