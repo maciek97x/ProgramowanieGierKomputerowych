@@ -16,6 +16,7 @@ void Object::init(const char *modelPath, const char* texturePath, const char* ve
 	obj::Model model = obj::loadModelFromFile(modelPath);
 	faceCount_ = model.faces["default"].size();
 
+	angularVelocity_ = glm::identity<glm::quat>();
 	velocity_ = glm::vec3();
 	acceleration_ = glm::vec3();
 	mass_ = 1.0f;
@@ -72,6 +73,7 @@ void Object::init(const char *modelPath, const char* texturePath, const char* ve
 		textured = false;
 	}
 	else {
+		textured = true;
 		glActiveTexture(GL_TEXTURE0);
 		glGenTextures(1, &texture_);
 		glBindTexture(GL_TEXTURE_2D, texture_);
@@ -90,25 +92,40 @@ void Object::init(const char *modelPath, const char* texturePath, const char* ve
 	}
 }
 
-void Object::setMatrixFunction(std::function<glm::mat4(float)> func) {
-	matrixFunction_ = func;
+void Object::setSize(float size) {
+	modelMatrix_ = glm::scale(modelMatrix_, glm::vec3(size));
+	mass_ = 4 * glm::pi<float>() / 3 * pow(size, 3);
+}
+
+void Object::setMass(float mass) {
+	mass_ = mass;
 }
 
 void Object::setModelMatrix(glm::mat4 const& matrix) {
-	localModelMatrix_ = matrix;
+	modelMatrix_ = matrix;
 }
 
 glm::vec3 Object::getPosition() {
-	return glm::vec3(getModelMatrix()[3]);
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(modelMatrix_, scale, rotation, translation, skew, perspective);
+	return translation;
 }
 
 void Object::setCollider(SphereCollider* collider) {
 	collider_ = collider;
-	collider->setModelMatrix(&localModelMatrix_);
+	collider->setModelMatrix(&modelMatrix_);
 }
 
 void Object::setPhysical(bool physical) {
 	physical_ = physical;
+}
+
+float Object::getMass() {
+	return mass_;
 }
 
 bool Object::getPhysical() {
@@ -147,9 +164,9 @@ void Object::collide(Object* other) {
 			float im2 = 1 / other->mass_;
 
 			// push-pull them apart based off their mass
-			localModelMatrix_ = glm::translate(localModelMatrix_, mtd * (im1 / (im1 + im2)));
+			modelMatrix_ = glm::translate(modelMatrix_, mtd * (im1 / (im1 + im2)));
 
-			other->localModelMatrix_ = glm::translate(other->localModelMatrix_, -mtd * (im1 / (im1 + im2)));
+			other->modelMatrix_ = glm::translate(other->modelMatrix_, -mtd * (im1 / (im1 + im2)));
 
 			// impact speed
 			glm::vec3 v = velocity_;
@@ -169,6 +186,17 @@ void Object::collide(Object* other) {
 			// change in momentum
 			velocity_ += impulse * im1;
 			other->velocity_ -= impulse * im2;
+
+			// change angular velocity after collision
+			glm::vec3 deltaNormalized = delta / glm::length(delta);
+			glm::vec3 deltaVelocity = other->velocity_ - velocity_;
+			glm::vec3 deltaVelocityNormalized = deltaVelocity / glm::length(deltaVelocity);
+
+			glm::vec3 rotationAxis = glm::cross(deltaNormalized, deltaVelocityNormalized);
+			float angle = glm::length(deltaVelocity);
+
+			angularVelocity_ *= glm::angleAxis(angle * i / im1, rotationAxis);
+			other->angularVelocity_ *= glm::angleAxis(-angle * i / im2, rotationAxis);
 		}
 		else if (physical_) {
 
@@ -176,22 +204,41 @@ void Object::collide(Object* other) {
 	}
 }
 
-void Object::update(float time) {
-	glm::mat4 externalTransform = glm::identity<glm::mat4>();
-	if (matrixFunction_) {
-		externalTransform = matrixFunction_(time);
-	}
-	modelMatrix_ = externalTransform * localModelMatrix_;
-}
+void Object::update(float time) {}
 
 void Object::updatePhysics(float time) {
 	if (physical_) {
-		if (localModelMatrix_[3][1] - collider_->getRadius() < 0 && velocity_[1] < 0) {
-			localModelMatrix_[3][1] = collider_->getRadius();
+		if (modelMatrix_[3][0] - collider_->getRadius() < -10 && velocity_[0] < 0) {
+			modelMatrix_[3][0] = collider_->getRadius() - 10;
+			velocity_[0] = -velocity_[0];
+		} else if (modelMatrix_[3][0] - collider_->getRadius() > 10 && velocity_[0] > 0) {
+			modelMatrix_[3][0] = collider_->getRadius() + 10;
+			velocity_[0] = -velocity_[0];
+		}
+		if (modelMatrix_[3][2] - collider_->getRadius() < -10 && velocity_[2] < 0) {
+			modelMatrix_[3][2] = collider_->getRadius() - 10;
+			velocity_[2] = -velocity_[2];
+		}
+		else if (modelMatrix_[3][2] - collider_->getRadius() > 10 && velocity_[2] > 0) {
+			modelMatrix_[3][2] = collider_->getRadius() + 10;
+			velocity_[2] = -velocity_[2];
+		}
+		if (modelMatrix_[3][1] - collider_->getRadius() < 0 && velocity_[1] < 0) {
+			modelMatrix_[3][1] = collider_->getRadius();
 			velocity_[1] = -velocity_[1];
 		}
 		velocity_ += acceleration_ * time;
-		localModelMatrix_ = glm::translate(localModelMatrix_, velocity_ * time);
+
+		glm::vec3 position = getPosition();
+		modelMatrix_ = glm::translate(modelMatrix_, -position);
+
+		printf("%f %f %f\n", position.x, position.y, position.z);
+		printf("  %f %f %f\n", getPosition().x, getPosition().y, getPosition().z);
+
+		modelMatrix_ *= glm::toMat4(glm::mix(glm::identity<glm::quat>(), angularVelocity_, time));
+		modelMatrix_ = glm::translate(modelMatrix_, position);
+
+		modelMatrix_ = glm::translate(modelMatrix_, velocity_ * time);
 	}
 }
 
@@ -210,6 +257,7 @@ void Object::render(RenderData& data) {
 	glUniform1i(glGetUniformLocation(program_, "skybox"), 0);
 	glUniform3fv(glGetUniformLocation(program_, "cameraPos"), 1, glm::value_ptr(data.cameraPos));
 	glUniform1fv(glGetUniformLocation(program_, "time"), 1, (GLfloat*)&data.time);
+	glUniform3f(glGetUniformLocation(program_, "directionalLight"), data.directionalLight.x, data.directionalLight.y, data.directionalLight.z);
 
 	if (textured) {
 		glBindTexture(GL_TEXTURE_2D, texture_);

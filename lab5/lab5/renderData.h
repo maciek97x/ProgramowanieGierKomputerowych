@@ -7,6 +7,7 @@ struct RenderData {
     glm::mat4 viewProjMatrix;
 	glm::mat4 viewMatrix;
 	glm::mat4 projMatrix;
+	glm::vec3 directionalLight;
     GLuint skyboxTexture;
 	glm::vec3 cameraPos;
 	GLfloat time;

@@ -38,6 +38,10 @@ vector<std::string> skyboxFaces =
 };
 
 void init() {
+	srand(time(NULL));
+
+	scene.setDirectionalLight(glm::normalize(glm::vec3(1.0f, 2.0f, 1.0f)));
+
 	cameraController.setCamera(&camera);
 	scene.setCamera(&camera);
 	camera.setViewProperties(glm::vec3(-10.0f, -2.0f, 2.0f), glm::quat(glm::vec3(0.0f, glm::half_pi<float>(), 0.0f)));
@@ -45,23 +49,18 @@ void init() {
 	skybox.init(skyboxFaces);
 	scene.setSkybox(&skybox);
 
-	Object *ball = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
-	ball->setCollider(new SphereCollider(1.0f));
-	ball->setPhysical(true);
-	ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 10, 4)));
-	scene.addObject(ball);
+	for (int i = 0; i < 20; ++i) {
+		glm::vec3 randPosition = glm::linearRand(glm::vec3(-8.0f, 3.0f, -8.0f), glm::vec3(8.0f, 30.0f, 8.0f));
+		float radius = 1.0f; // 0.1f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 0.9f));
 
-	Object *ball_2 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
-	ball_2->setCollider(new SphereCollider(1.0f));
-	ball_2->setPhysical(true);
-	ball_2->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 10, 8)));
-	scene.addObject(ball_2);
-
-	Object *ball_3 = new Object("models/ball.obj", "textures/grid.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
-	ball_3->setCollider(new SphereCollider(1.0f));
-	ball_3->setPhysical(true);
-	ball_3->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 3, 7)));
-	scene.addObject(ball_3);
+		Object *ball = new Object("models/ball.obj", "textures/soccer.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
+		ball->setSize(radius);
+		ball->setMass(4 * glm::pi<float>() / 3 * pow(radius, 3));
+		ball->setCollider(new SphereCollider(radius));
+		ball->setPhysical(true);
+		ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), randPosition));
+		scene.addObject(ball);
+	}
 }
 
 void updatePhysics(float dtime)
@@ -86,7 +85,6 @@ void renderScene() {
 	cameraController.step(dtime);
 
 	updatePhysics(dtime);
-	scene.update(time);
 	scene.render(time);
 }
 

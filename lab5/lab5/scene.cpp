@@ -9,7 +9,7 @@ Scene::~Scene() {
 
 int Scene::addObject(Object * object) {
 	if (object->getPhysical()) {
-		object->addForce(glm::vec3(0.0f, -gravity_, 0.0f));
+		object->addForce(glm::vec3(0.0f, -gravity_ * object->getMass(), 0.0f));
 	}
     objects_[nextObjectId_] = object;
 
@@ -20,10 +20,14 @@ void Scene::removeObject(int id) {
     objects_.erase(id);
 }
 
-void Scene::update(float time) {
-	for (auto &object : objects_) {
-		object.second->update(time);
-	}
+void Scene::setDirectionalLight(glm::vec3 directionalLight)
+{
+	directionalLight_ = directionalLight;
+}
+
+glm::vec3 Scene::getDirectionalLight() const
+{
+	return directionalLight_;
 }
 
 void Scene::updatePhysics(float time) {
@@ -48,6 +52,7 @@ void Scene::render(float time) {
     if (!camera_) return;
 
     RenderData data;
+	data.directionalLight = directionalLight_;
     data.viewProjMatrix = camera_->getViewProjMatrix();
 	data.viewMatrix = camera_->getViewMatrix();
 	data.projMatrix = camera_->getProjectionMatrix();

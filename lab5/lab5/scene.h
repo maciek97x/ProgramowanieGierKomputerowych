@@ -23,7 +23,11 @@ public:
 
     //removes object from render loop found by its id
     void removeObject(int id);
-    
+
+	//sets main light source
+	void setDirectionalLight(glm::vec3 directionalLight);
+	glm::vec3 getDirectionalLight() const;
+
     // update scene
     void update(float time);
 
@@ -45,5 +49,6 @@ private:
     unsigned int nextObjectId_ = 1;
     unsigned int nextInputId_ = 1;
 	float gravity_ = 1.0f;
+	glm::vec3 directionalLight_;
 };
 

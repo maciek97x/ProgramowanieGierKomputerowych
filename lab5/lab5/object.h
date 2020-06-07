@@ -2,6 +2,8 @@
 #include "Renderable.h"
 #include <soil.h>
 #include <functional>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include "sphereCollider.h"
 
@@ -13,16 +15,16 @@ public:
 	Object(const char* modelPath, const char* texturePath, const char* vertexShaderFilename, const char* fragmentShaderFilename);
 	virtual ~Object();
 
-	// set function to be called to update the model matrix
-	void setMatrixFunction(std::function<glm::mat4(float)> func);
-
 	void setModelMatrix(glm::mat4 const& matrix);
+	void setSize(float size);
 	glm::mat4 getModelMatrix() const { return modelMatrix_; }
 	glm::vec3 getPosition();
 
 	void setCollider(SphereCollider* collider);
 	void setPhysical(bool physical);
 	bool getPhysical();
+	void setMass(float size);
+	float getMass();
 
 	void addForce(glm::vec3 force);
 	glm::vec3 getVelocity();
@@ -42,11 +44,12 @@ private:
 	int faceCount_;
 	bool textured;
 
-	glm::mat4 localModelMatrix_, modelMatrix_;
+	glm::mat4 modelMatrix_;
 	SphereCollider* collider_;
 	float mass_;
 	glm::vec3 velocity_;
 	glm::vec3 acceleration_;
+	glm::quat angularVelocity_;
 	bool physical_;
 
 	GLuint texture_;
@@ -54,6 +57,5 @@ private:
 	GLuint vertexArray_;
 	GLuint vertexBuffer_;
 	GLuint vertexIndexBuffer_;
-	std::function<glm::mat4(float)> matrixFunction_;
 };
 
