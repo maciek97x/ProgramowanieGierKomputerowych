@@ -13,6 +13,7 @@
 #include "scene.h"
 #include "skybox.h"
 #include "object.h"
+#include "lightSource.h"
 #include "shaderLoader.h"
 #include "sphereCollider.h"
 
@@ -49,16 +50,36 @@ void init() {
 	skybox.init(skyboxFaces);
 	scene.setSkybox(&skybox);
 
-	for (int i = 0; i < 20; ++i) {
-		glm::vec3 randPosition = glm::linearRand(glm::vec3(-8.0f, 3.0f, -8.0f), glm::vec3(8.0f, 30.0f, 8.0f));
-		float radius = 1.0f; // 0.1f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 0.9f));
+	LightSource* lightR = new LightSource(glm::vec3(1.0f, 0.0f, 0.0f), "shaders/shader_light.vert", "shaders/shader_light.frag");
+	lightR->setPosition(glm::vec3(10.0f, 10.0f, 0.0f));
+	lightR->setMatrixFunction([](float time) {
+		// rotate
+		return glm::translate(glm::identity<glm::mat4>(), glm::vec3(glm::cos(time), glm::sin(time), 0.0f));
+	});
+	scene.addLightSource(lightR);
 
-		Object *ball = new Object("models/ball.obj", "textures/soccer.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
-		ball->setSize(radius);
+	LightSource* lightG = new LightSource(glm::vec3(0.0f, 1.0f, 0.0f), "shaders/shader_light.vert", "shaders/shader_light.frag");
+	lightG->setPosition(glm::vec3(-10.0f, 10.0f, 0.0f));
+	lightG->setMatrixFunction([](float time) {
+		// scale
+		return glm::scale(glm::identity<glm::mat4>(), glm::vec3(glm::cos(time) + 2.0f));
+	});
+	scene.addLightSource(lightG);
+
+	LightSource* lightB = new LightSource(glm::vec3(0.0f, 0.0f, 1.0f), "shaders/shader_light.vert", "shaders/shader_light.frag");
+	lightB->setPosition(glm::vec3(0.0f, 10.0f, 15.0f));
+	scene.addLightSource(lightB);
+
+	for (int i = 0; i < 16; ++i) {
+		glm::vec3 randPosition = glm::linearRand(glm::vec3(-8.0f, 3.0f, -8.0f), glm::vec3(8.0f, 30.0f, 8.0f));
+		float radius = 0.2f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 0.8f));
+
+		Object *ball = new Object("models/ball.obj", "textures/soccer2.png", "shaders/shader_texture.vert", "shaders/shader_texture.frag");
+		ball->setPosition(randPosition);
 		ball->setMass(4 * glm::pi<float>() / 3 * pow(radius, 3));
+		ball->setScale(glm::vec3(radius));
 		ball->setCollider(new SphereCollider(radius));
 		ball->setPhysical(true);
-		ball->setModelMatrix(glm::translate(glm::identity<glm::mat4>(), randPosition));
 		scene.addObject(ball);
 	}
 }
@@ -85,6 +106,7 @@ void renderScene() {
 	cameraController.step(dtime);
 
 	updatePhysics(dtime);
+	scene.update(time);
 	scene.render(time);
 }
 

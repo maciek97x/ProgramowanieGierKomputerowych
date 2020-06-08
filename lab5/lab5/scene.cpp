@@ -20,6 +20,16 @@ void Scene::removeObject(int id) {
     objects_.erase(id);
 }
 
+int Scene::addLightSource(LightSource * lightSource) {
+	lightSources_[nextLightSourceId_] = lightSource;
+	lightSource->setCamera(camera_);
+	return nextLightSourceId_++;
+}
+
+void Scene::removeLightSource(int id) {
+	lightSources_.erase(id);
+}
+
 void Scene::setDirectionalLight(glm::vec3 directionalLight)
 {
 	directionalLight_ = directionalLight;
@@ -28,6 +38,15 @@ void Scene::setDirectionalLight(glm::vec3 directionalLight)
 glm::vec3 Scene::getDirectionalLight() const
 {
 	return directionalLight_;
+}
+
+void Scene::update(float time) {
+	for (auto &object : objects_) {
+		object.second->update(time);
+	}
+	for (auto &lightSource : lightSources_) {
+		lightSource.second->update(time);
+	}
 }
 
 void Scene::updatePhysics(float time) {
@@ -59,11 +78,26 @@ void Scene::render(float time) {
 	data.cameraPos = camera_->getPosition();
 	data.skyboxTexture = skybox_->getTexture();
 	data.time = time;
+	data.lightSourcesColors = (glm::vec3*)malloc(lightSources_.size() * sizeof(glm::vec3));
+	data.lightSourcesPositions = (glm::vec3*)malloc(lightSources_.size() * sizeof(glm::vec3));
+
+	int i = 0;
+	for (auto &lightSource : lightSources_) {
+		data.lightSourcesColors[i] = lightSource.second->getColor();
+		data.lightSourcesPositions[i] = lightSource.second->getPosition();
+		++i;
+	}
+
+	data.lightsCount = i;
 
 	skybox_->render(data);
 
-    for (auto &object : objects_)
-        object.second->render(data);
+	for (auto &object : objects_) {
+		object.second->render(data);
+	}
+	for (auto &lightSource : lightSources_) {
+		lightSource.second->render(data);
+	}
 
     glutSwapBuffers();
 }

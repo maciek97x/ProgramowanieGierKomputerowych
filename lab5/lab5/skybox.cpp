@@ -94,9 +94,9 @@ bool SkyBox::init(std::vector<std::string> faces) {
 	return true;
 }
 
-void SkyBox::setModelMatrix(glm::mat4 const & m) {
-	// ignore (skybox is static)
-}
+// skybox is static
+void SkyBox::setPosition(glm::vec3 position) {}
+void SkyBox::setRotation(glm::quat rotation) {}
 
 glm::mat4 SkyBox::getModelMatrix() const {
 	return glm::mat4();

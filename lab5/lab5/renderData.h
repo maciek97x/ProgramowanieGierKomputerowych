@@ -11,5 +11,8 @@ struct RenderData {
     GLuint skyboxTexture;
 	glm::vec3 cameraPos;
 	GLfloat time;
+	int lightsCount;
+	glm::vec3 *lightSourcesPositions;
+	glm::vec3 *lightSourcesColors;
 };
 

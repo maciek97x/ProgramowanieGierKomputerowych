@@ -7,16 +7,15 @@
 
 #include "sphereCollider.h"
 
-typedef glm::mat4(*matrixFunction)(float time);
-
 class Object : public Renderable {
 public:
 	Object(const char* modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename);
 	Object(const char* modelPath, const char* texturePath, const char* vertexShaderFilename, const char* fragmentShaderFilename);
 	virtual ~Object();
 
-	void setModelMatrix(glm::mat4 const& matrix);
-	void setSize(float size);
+	void setPosition(glm::vec3 position);
+	void setRotation(glm::quat rotation);
+	void setScale(glm::vec3 scale);
 	glm::mat4 getModelMatrix() const { return modelMatrix_; }
 	glm::vec3 getPosition();
 
@@ -47,9 +46,12 @@ private:
 	glm::mat4 modelMatrix_;
 	SphereCollider* collider_;
 	float mass_;
+	glm::vec3 position_;
 	glm::vec3 velocity_;
 	glm::vec3 acceleration_;
+	glm::quat rotation_;
 	glm::quat angularVelocity_;
+	glm::vec3 scale_;
 	bool physical_;
 
 	GLuint texture_;

@@ -9,11 +9,9 @@ public:
     Renderable() {}
     virtual ~Renderable() {}
 
-    // set model matrix
-    // (e.g. called by physics simulation when this renderable
-    // is set as userData for the physical body)
-    // matrix - matrix to be set
-    virtual void setModelMatrix(glm::mat4 const& matrix) = 0;
+	virtual void setPosition(glm::vec3 position) = 0;
+
+	virtual void setRotation(glm::quat rotation) = 0;
 
     // get model matrix
     virtual glm::mat4 getModelMatrix() const = 0;

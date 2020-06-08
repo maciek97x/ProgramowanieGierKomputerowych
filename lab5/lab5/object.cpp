@@ -16,6 +16,10 @@ void Object::init(const char *modelPath, const char* texturePath, const char* ve
 	obj::Model model = obj::loadModelFromFile(modelPath);
 	faceCount_ = model.faces["default"].size();
 
+	position_ = glm::vec3();
+	rotation_ = glm::identity<glm::quat>();
+	scale_ = glm::vec3();
+	modelMatrix_ = glm::identity<glm::mat4>();
 	angularVelocity_ = glm::identity<glm::quat>();
 	velocity_ = glm::vec3();
 	acceleration_ = glm::vec3();
@@ -91,28 +95,24 @@ void Object::init(const char *modelPath, const char* texturePath, const char* ve
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }
-
-void Object::setSize(float size) {
-	modelMatrix_ = glm::scale(modelMatrix_, glm::vec3(size));
-	mass_ = 4 * glm::pi<float>() / 3 * pow(size, 3);
-}
-
 void Object::setMass(float mass) {
 	mass_ = mass;
 }
 
-void Object::setModelMatrix(glm::mat4 const& matrix) {
-	modelMatrix_ = matrix;
+void Object::setPosition(glm::vec3 position) {
+	position_ = position;
+}
+
+void Object::setRotation(glm::quat rotation) {
+	rotation_ = rotation;
+}
+
+void Object::setScale(glm::vec3 scale) {
+	scale_ = scale;
 }
 
 glm::vec3 Object::getPosition() {
-	glm::vec3 scale;
-	glm::quat rotation;
-	glm::vec3 translation;
-	glm::vec3 skew;
-	glm::vec4 perspective;
-	glm::decompose(modelMatrix_, scale, rotation, translation, skew, perspective);
-	return translation;
+	return position_;
 }
 
 void Object::setCollider(SphereCollider* collider) {
@@ -193,6 +193,7 @@ void Object::collide(Object* other) {
 			glm::vec3 deltaVelocityNormalized = deltaVelocity / glm::length(deltaVelocity);
 
 			glm::vec3 rotationAxis = glm::cross(deltaNormalized, deltaVelocityNormalized);
+			rotationAxis /= glm::length(rotationAxis);
 			float angle = glm::length(deltaVelocity);
 
 			angularVelocity_ *= glm::angleAxis(angle * i / im1, rotationAxis);
@@ -229,16 +230,10 @@ void Object::updatePhysics(float time) {
 		}
 		velocity_ += acceleration_ * time;
 
-		glm::vec3 position = getPosition();
-		modelMatrix_ = glm::translate(modelMatrix_, -position);
+		position_ += velocity_ * time;
+		rotation_ *= glm::mix(glm::identity<glm::quat>(), angularVelocity_, time);
 
-		printf("%f %f %f\n", position.x, position.y, position.z);
-		printf("  %f %f %f\n", getPosition().x, getPosition().y, getPosition().z);
-
-		modelMatrix_ *= glm::toMat4(glm::mix(glm::identity<glm::quat>(), angularVelocity_, time));
-		modelMatrix_ = glm::translate(modelMatrix_, position);
-
-		modelMatrix_ = glm::translate(modelMatrix_, velocity_ * time);
+		modelMatrix_ = glm::scale(glm::translate(glm::mat4(1.0f), position_) * glm::toMat4(rotation_), scale_);
 	}
 }
 
@@ -258,6 +253,9 @@ void Object::render(RenderData& data) {
 	glUniform3fv(glGetUniformLocation(program_, "cameraPos"), 1, glm::value_ptr(data.cameraPos));
 	glUniform1fv(glGetUniformLocation(program_, "time"), 1, (GLfloat*)&data.time);
 	glUniform3f(glGetUniformLocation(program_, "directionalLight"), data.directionalLight.x, data.directionalLight.y, data.directionalLight.z);
+	glUniform1d(glGetUniformLocation(program_, "lightsCount"), data.lightsCount);
+	glUniform3fv(glGetUniformLocation(program_, "lightSourcesColors"),  data.lightsCount, glm::value_ptr(data.lightSourcesColors[0]));
+	glUniform3fv(glGetUniformLocation(program_, "lightSourcesPositions"), data.lightsCount, glm::value_ptr(data.lightSourcesPositions[0]));
 
 	if (textured) {
 		glBindTexture(GL_TEXTURE_2D, texture_);

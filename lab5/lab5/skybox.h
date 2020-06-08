@@ -19,7 +19,8 @@ public:
 
     bool init(std::vector<std::string> faces);
 
-	void setModelMatrix(glm::mat4 const &m);
+	void setPosition(glm::vec3 position);
+	void setRotation(glm::quat rotation);
 	glm::mat4 getModelMatrix() const;
 	GLuint getTexture();
 	void update(float time);
