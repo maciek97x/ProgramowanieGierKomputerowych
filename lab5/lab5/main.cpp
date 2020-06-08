@@ -67,10 +67,14 @@ void init() {
 	scene.addLightSource(lightG);
 
 	LightSource* lightB = new LightSource(glm::vec3(0.0f, 0.0f, 1.0f), "shaders/shader_light.vert", "shaders/shader_light.frag");
-	lightB->setPosition(glm::vec3(0.0f, 10.0f, 15.0f));
+	lightB->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	lightB->setMatrixFunction([](float time) {
+		// rotate
+		return glm::translate(glm::identity<glm::mat4>(), glm::vec3(32*glm::cos(time), 0.0f, 32*glm::sin(time)));
+	});
 	scene.addLightSource(lightB);
 
-	for (int i = 0; i < 16; ++i) {
+	for (int i = 0; i < 20; ++i) {
 		glm::vec3 randPosition = glm::linearRand(glm::vec3(-8.0f, 3.0f, -8.0f), glm::vec3(8.0f, 30.0f, 8.0f));
 		float radius = 0.2f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / 0.8f));
 

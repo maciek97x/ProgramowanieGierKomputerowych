@@ -12,7 +12,7 @@ struct RenderData {
 	glm::vec3 cameraPos;
 	GLfloat time;
 	int lightsCount;
-	glm::vec3 *lightSourcesPositions;
-	glm::vec3 *lightSourcesColors;
+	glm::vec3 lightSourcesPositions[96];
+	glm::vec3 lightSourcesColors[96];
 };
 

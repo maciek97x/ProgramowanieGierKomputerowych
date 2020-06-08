@@ -78,8 +78,6 @@ void Scene::render(float time) {
 	data.cameraPos = camera_->getPosition();
 	data.skyboxTexture = skybox_->getTexture();
 	data.time = time;
-	data.lightSourcesColors = (glm::vec3*)malloc(lightSources_.size() * sizeof(glm::vec3));
-	data.lightSourcesPositions = (glm::vec3*)malloc(lightSources_.size() * sizeof(glm::vec3));
 
 	int i = 0;
 	for (auto &lightSource : lightSources_) {
