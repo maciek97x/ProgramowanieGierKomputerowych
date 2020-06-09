@@ -253,7 +253,7 @@ void Object::render(RenderData& data) {
 	glUniform3fv(glGetUniformLocation(program_, "cameraPos"), 1, glm::value_ptr(data.cameraPos));
 	glUniform1fv(glGetUniformLocation(program_, "time"), 1, (GLfloat*)&data.time);
 	glUniform3f(glGetUniformLocation(program_, "directionalLight"), data.directionalLight.x, data.directionalLight.y, data.directionalLight.z);
-	glUniform1f(glGetUniformLocation(program_, "lightsCount"), data.lightsCount);
+	glUniform1f(glGetUniformLocation(program_, "lightsCount"), (GLfloat)data.lightsCount);
 	glUniform3fv(glGetUniformLocation(program_, "lightSourcesColors"), 32, glm::value_ptr(data.lightSourcesColors[0]));
 	glUniform3fv(glGetUniformLocation(program_, "lightSourcesPositions"), 32, glm::value_ptr(data.lightSourcesPositions[0]));
 

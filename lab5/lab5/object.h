@@ -41,7 +41,7 @@ private:
 	void init(const char* modelPath, const char* texturePath, const char* vertexShaderFilename, const char* geometryShaderFilename, const char* fragmentShaderFilename);
 
 	int faceCount_;
-	bool textured;
+	bool textured = false;
 
 	glm::mat4 modelMatrix_;
 	SphereCollider* collider_;

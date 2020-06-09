@@ -17,7 +17,7 @@
 #include "shaderLoader.h"
 #include "sphereCollider.h"
 
-const float gravity = 9.8;
+const float gravity = 9.8f;
 
 // fixed timestep for stable and deterministic simulation
 const double physicsStepTime = 1.0 / 60.0;
@@ -39,7 +39,7 @@ vector<std::string> skyboxFaces =
 };
 
 void init() {
-	srand(time(NULL));
+	srand((int)time(NULL));
 
 	scene.setDirectionalLight(glm::normalize(glm::vec3(1.0f, 2.0f, 1.0f)));
 
@@ -96,7 +96,7 @@ void updatePhysics(float dtime)
 	}
 	while (physicsTimeToProcess > 0)
 	{
-		scene.updatePhysics(physicsStepTime);
+		scene.updatePhysics((float)physicsStepTime);
 		physicsTimeToProcess -= physicsStepTime;
 	}
 }
@@ -107,11 +107,11 @@ void renderScene() {
 	double dtime = time - prevTime;
 	prevTime = time;
 
-	cameraController.step(dtime);
+	cameraController.step((float)dtime);
 
-	updatePhysics(dtime);
-	scene.update(time);
-	scene.render(time);
+	updatePhysics((float)dtime);
+	scene.update((float)time);
+	scene.render((float)time);
 }
 
 void idle() {

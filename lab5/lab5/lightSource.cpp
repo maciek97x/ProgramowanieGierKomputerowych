@@ -13,7 +13,8 @@ void LightSource::init(glm::vec3 color, const char* vertexShaderFilename,  const
 		vertexShaderFilename,
 		fragmentShaderFilename);
 
-	position_ = glm::vec3();
+	modelMatrix_ = glm::identity<glm::mat4>();
+	position_ = glm::vec3(0.0f);
 	rotation_ = glm::identity<glm::quat>();
 	size_ = 1.0f;
 	color_ = color;
@@ -55,7 +56,9 @@ void LightSource::update(float time) {
 	if (matrixFunction_) {
 		externalTransform = matrixFunction_(time);
 	}
-	rotation_ = glm::lookAt(position_, camera_->getPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::vec3 direction = getPosition() - camera_->getPosition();
+	direction /= glm::length(direction);
+	rotation_ = glm::quatLookAt(direction, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix_ = glm::scale(glm::translate(glm::mat4(1.0f), position_) * externalTransform * glm::toMat4(rotation_), glm::vec3(size_));
 }
 
@@ -72,12 +75,12 @@ void LightSource::render(RenderData& data) {
 	glUniform3f(glGetUniformLocation(program_, "color"), color_.x, color_.y, color_.z);
 
 	float vert_pos[] = {
-		0, -0.5, -0.5,
-		0, 0.5, -0.5,
-		0, 0.5, 0.5,
-		0, -0.5, -0.5,
-		0, 0.5, 0.5,
-		0, -0.5, 0.5,
+		-0.5, -0.5, 0,
+		-0.5, 0.5, 0,
+		0.5, 0.5, 0,
+		-0.5, -0.5, 0,
+		0.5, 0.5, 0,
+		0.5, -0.5, 0,
 	};
 	float vert_texc[] = {
 		0, 1,

@@ -2,6 +2,7 @@
 
 Scene::Scene(float gravity) {
 	gravity_ = gravity;
+	directionalLight_ = glm::vec3(0.0f);
 }
 
 Scene::~Scene() {

@@ -4,8 +4,8 @@
 CameraController::CameraController() {
 	moveSpeed_ = 20.0f;
 	rotationSpeed_ = glm::radians(10.0f);
-	glm::vec3 doffset_(0, 0, 0);
-	float dyaw_ = 0.0f;
+	dyaw_ = 0.0f;
+	doffset_ = glm::vec3(0.0f);
 }
 
 CameraController::~CameraController() {

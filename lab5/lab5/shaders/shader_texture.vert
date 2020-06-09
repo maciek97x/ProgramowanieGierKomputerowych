@@ -26,5 +26,5 @@ void main()
 	}
 	brightness = (dot(normalize(mat3(model) * vertexNormal), directionalLight) + 1)/2;
     texCoords = vec2(vertexTexCoord);
-    gl_Position = projection * view * model * vec4(vertexPosition, 1.0); 
+    gl_Position = projection * view * model * vec4(vertexPosition, 1.0);
 }
